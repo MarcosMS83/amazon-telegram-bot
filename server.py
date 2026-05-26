@@ -3,7 +3,26 @@ import threading
 import asyncio
 import os
 
-from bot import loop_bot
+# =====================================================
+# IMPORT BOT
+# =====================================================
+
+try:
+
+    from bot import loop_bot
+
+    print(
+        "BOT IMPORTADO COM SUCESSO"
+    )
+
+except Exception as e:
+
+    print(
+        "ERRO IMPORT BOT:",
+        e
+    )
+
+    loop_bot = None
 
 # =====================================================
 # FLASK
@@ -32,6 +51,14 @@ def iniciar_bot():
     print(
         "INICIANDO BOT..."
     )
+
+    if loop_bot is None:
+
+        print(
+            "BOT NÃO INICIADO"
+        )
+
+        return
 
     loop = asyncio.new_event_loop()
 
@@ -67,7 +94,7 @@ print(
 )
 
 # =====================================================
-# FLASK
+# START FLASK
 # =====================================================
 
 if __name__ == "__main__":
