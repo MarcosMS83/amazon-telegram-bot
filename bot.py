@@ -76,3 +76,16 @@ def start_bot():
     asyncio.run(
         loop_bot()
     )
+# =====================================================
+# START BOT
+# =====================================================
+
+def start_bot():
+
+    print(
+        "START BOT EXECUTADO"
+    )
+
+    asyncio.run(
+        loop_bot()
+    )
