@@ -60,18 +60,28 @@ def buscar_promocoes():
 
     try:
 
-        response = requests.get(
+      response = requests.get(
 
-            RSS_URL,
+    RSS_URL,
 
-            timeout=20,
+    headers={
 
-            headers={
-                "User-Agent":
-                "Mozilla/5.0"
-            }
+        "User-Agent":
+        "Mozilla/5.0",
 
-        )
+        "Accept":
+        "application/rss+xml, application/xml",
+
+        "Connection":
+        "close"
+
+    },
+
+    timeout=(5, 15),
+
+    allow_redirects=True
+
+)
 
         print(
             f"RSS STATUS: "
