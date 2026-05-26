@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>MS Geradores - PDF</title>
+
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script src="https://unpkg.com/downloadjs@1.4.7"></script>
+
+<style>
+
+body{
+  font-family:Arial;
+  background:#f4f4f4;
+  padding:40px;
+}
+
+.container{
+  max-width:1100px;
+  margin:auto;
+  background:white;
+  padding:40px;
+  border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+.logo-area{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.logo-ms{
+  max-width:91px;
+}
+
+h1{
+  margin-bottom:15px;
+  color:#0f4ea8;
+  text-align:center;
+}
+
+.subtitle{
+  margin-bottom:30px;
+  color:#666;
+  text-align:center;
+}
+
+.tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:30px;
+}
+
+.tab-button{
+  padding:14px 20px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  background:#ddd;
+  font-weight:bold;
+}
+
+.tab-button.active{
+  background:#0f4ea8;
+  color:white;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+.card{
+  border:1px solid #ddd;
+  padding:20px;
+  border-radius:12px;
+}
+
+label{
+  display:block;
+  margin-bottom:8px;
+  font-weight:bold;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  border:1px solid #ccc;
+  border-radius:10px;
+  font-size:16px;
+}
+
+small{
+  color:#777;
+  display:block;
+  margin-top:6px;
+}
+
+button{
+  width:100%;
+  padding:18px;
+  border:none;
+  background:#0f4ea8;
+  color:white;
+  font-size:18px;
+  border-radius:12px;
+  cursor:pointer;
+  margin-top:30px;
+  font-weight:bold;
+}
+
+button:hover{
+  background:#0b3d84;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- LOGO -->
+
+<div class="logo-area">
+
+<img
+  src="logo.jpeg"
+  alt="MS Geradores"
+  class="logo-ms"
+>
+
+</div>
+
+<h1>MS GERADORES</h1>
+
+<!-- ========================================= -->
+<!-- ABAS -->
+<!-- ========================================= -->
+
+<div class="tabs">
+
+<button
+  class="tab-button active"
+  onclick="abrirAba('aba-gmg', this)"
+>
+GMG CARENADO
+</button>
+
+<button
+  class="tab-button"
+  onclick="abrirAba('aba-sala', this)"
+>
+SALA GMG ABERTO
+</button>
+
+</div>
+
+<!-- ========================================= -->
+<!-- ABA GMG -->
+<!-- ========================================= -->
+
+<div
+  id="aba-gmg"
+  class="tab-content"
+>
+
+<div class="subtitle">
+Gerador automático de PDF dimensional
+</div>
+
+<div class="grid">
+
+<div class="card">
+
+<label>Potência (kVA)</label>
+<input type="number" id="potencia">
+
+</div>
+
+<div class="card">
+
+<label>Largura (mm)</label>
+<input type="number" id="largura">
+
+</div>
+
+<div class="card">
+
+<label>Altura (mm)</label>
+<input type="number" id="altura">
+
+</div>
+
+<div class="card">
+
+<label>Comprimento (mm)</label>
+<input type="number" id="comprimento">
+
+</div>
+
+<div class="card">
+
+<label>Peso (kg) - Opcional</label>
+<input type="number" id="peso">
+
+<small>
+Se deixar vazio o peso não será inserido no PDF
+</small>
+
+</div>
+
+</div>
+
+<button onclick="gerarPDF()">
+GERAR PDF
+</button>
+
+</div>
+
+<!-- ========================================= -->
+<!-- ABA SALA -->
+<!-- ========================================= -->
+
+<div
+  id="aba-sala"
+  class="tab-content"
+  style="display:none;"
+>
+
+<div class="subtitle">
+Layout sala GMG aberto com kit atenuador
+</div>
+
+<div class="grid">
+
+<div class="card">
+
+<label>Potência (kVA)</label>
+<input type="number" id="salaPotencia">
+
+</div>
+
+<div class="card">
+
+<label>Comprimento GMG (mm)</label>
+<input type="number" id="gmgComprimento">
+
+</div>
+
+<div class="card">
+
+<label>Largura GMG (mm)</label>
+<input type="number" id="gmgLargura">
+
+</div>
+
+<div class="card">
+
+<label>Largura Atenuador Entrada (mm)</label>
+<input type="number" id="entradaLargura">
+
+</div>
+
+<div class="card">
+
+<label>Comprimento Atenuador Entrada (mm)</label>
+<input type="number" id="entradaComprimento">
+
+</div>
+
+<div class="card">
+
+<label>Altura Atenuador Entrada (mm)</label>
+<input type="number" id="entradaAltura">
+
+</div>
+
+<div class="card">
+
+<label>Largura Atenuador Saída (mm)</label>
+<input type="number" id="saidaLargura">
+
+</div>
+
+<div class="card">
+
+<label>Comprimento Atenuador Saída (mm)</label>
+<input type="number" id="saidaComprimento">
+
+</div>
+
+<div class="card">
+
+<label>Altura Atenuador Saída (mm)</label>
+<input type="number" id="saidaAltura">
+
+</div>
+
+<div class="card">
+
+<label>Largura Porta (mm)</label>
+<input type="number" id="larguraPorta">
+
+</div>
+
+</div>
+
+<button onclick="gerarPDFSala()">
+GERAR PDF SALA
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+function abrirAba(id, botao){
+
+  document
+    .querySelectorAll(".tab-content")
+    .forEach(el=>{
+      el.style.display="none";
+    });
+
+  document
+    .querySelectorAll(".tab-button")
+    .forEach(el=>{
+      el.classList.remove("active");
+    });
+
+  document
+    .getElementById(id)
+    .style.display="block";
+
+  botao.classList.add("active");
+
+}
+
+/* ========================================= */
+/* PDF GMG CARENADO */
+/* ========================================= */
+
+async function gerarPDF(){
+
+  const potencia =
+    document.getElementById("potencia").value;
+
+  const altura =
+    parseInt(
+      document.getElementById("altura").value
+    );
+
+  const largura =
+    parseInt(
+      document.getElementById("largura").value
+    );
+
+  const comprimento =
+    parseInt(
+      document.getElementById("comprimento").value
+    );
+
+  const peso =
+    document.getElementById("peso").value;
+
+  if(
+    !potencia ||
+    !altura ||
+    !largura ||
+    !comprimento
+  ){
+
+    alert("Preencha os campos obrigatórios.");
+
+    return;
+
+  }
+
+  const larguraBase =
+    largura + 2000;
+
+  const comprimentoBase =
+    comprimento + 2000;
+
+  /*
+  COORDENADAS
+  */
+
+  const alturaX = 85;
+  const alturaY = 430;
+
+  const larguraX = 620;
+  const larguraY = 325;
+
+  const comprimentoX = 235;
+  const comprimentoY = 328;
+
+  const larguraBaseX = 85;
+  const larguraBaseY = 218;
+
+  const comprimentoBase1X = 235;
+  const comprimentoBase1Y = 297;
+
+  const comprimentoBase2X = 620;
+  const comprimentoBase2Y = 210;
+
+  const potenciaX = 710;
+  const potenciaY = 32;
+
+  const pesoX = 605;
+  const pesoY = 60;
+
+  /*
+  PDF
+  */
+
+  const existingPdfBytes =
+    await fetch(
+      "Dimensional GMG 25 KVA.pdf"
+    ).then(res => res.arrayBuffer());
+
+  const pdfDoc =
+    await PDFLib.PDFDocument.load(
+      existingPdfBytes
+    );
+
+  const page =
+    pdfDoc.getPages()[0];
+
+  const black =
+    PDFLib.rgb(0,0,0);
+
+  const font =
+    await pdfDoc.embedFont(
+      PDFLib.StandardFonts.Helvetica
+    );
+
+  page.drawText(
+    String(altura),
+    {
+      x:alturaX,
+      y:alturaY,
+      size:7,
+      font:font,
+      color:black
+    }
+  );
+
+  page.drawText(
+    String(largura),
+    {
+      x:larguraX,
+      y:larguraY,
+      size:7,
+      font:font,
+      color:black
+    }
+  );
+
+  page.drawText(
+    String(comprimento),
+    {
+      x:comprimentoX,
+      y:comprimentoY,
+      size:7,
+      font:font,
+      color:black
+    }
+  );
+
+  page.drawText(
+    String(larguraBase),
+    {
+      x:larguraBaseX,
+      y:larguraBaseY,
+      size:7,
+      font:font,
+      color:black
+    }
+  );
+
+  page.drawText(
+    String(comprimentoBase),
+    {
+      x:comprimentoBase1X,
+      y:comprimentoBase1Y,
+      size:7,
+      font:font,
+      color:black
+    }
+  );
+
+  page.drawText(
+    String(comprimentoBase),
+    {
+      x:comprimentoBase2X,
+      y:comprimentoBase2Y,
+      size:7,
+      font:font,
+      color:black
+    }
+  );
+
+  if(peso){
+
+    page.drawText(
+      `Peso: ${peso} kg`,
+      {
+        x:pesoX,
+        y:pesoY,
+        size:7,
+        font:font,
+        color:black
+      }
+    );
+
+  }
+
+  page.drawText(
+    `${potencia}kVA`,
+    {
+      x:potenciaX,
+      y:potenciaY,
+      size:7,
+      font:font,
+      color:black
+    }
+  );
+
+  const pdfBytes =
+    await pdfDoc.save();
+
+  download(
+    pdfBytes,
+    `GMG_${potencia}kVA.pdf`,
+    "application/pdf"
+  );
+
+}
+
+/* ========================================= */
+/* PDF SALA */
+/* ========================================= */
+
+async function gerarPDFSala(){
+
+  const potencia =
+    document.getElementById(
+      "salaPotencia"
+    ).value;
+
+  const gmgComprimento =
+    parseInt(
+      document.getElementById(
+        "gmgComprimento"
+      ).value
+    );
+
+  const gmgLargura =
+    parseInt(
+      document.getElementById(
+        "gmgLargura"
+      ).value
+    );
+
+  const entradaLargura =
+    parseInt(
+      document.getElementById(
+        "entradaLargura"
+      ).value
+    );
+
+  const entradaComprimento =
+    parseInt(
+      document.getElementById(
+        "entradaComprimento"
+      ).value
+    );
+
+  const entradaAltura =
+    parseInt(
+      document.getElementById(
+        "entradaAltura"
+      ).value
+    );
+
+  const saidaLargura =
+    parseInt(
+      document.getElementById(
+        "saidaLargura"
+      ).value
+    );
+
+  const saidaComprimento =
+    parseInt(
+      document.getElementById(
+        "saidaComprimento"
+      ).value
+    );
+
+  const saidaAltura =
+    parseInt(
+      document.getElementById(
+        "saidaAltura"
+      ).value
+    );
+
+  const larguraPorta =
+    parseInt(
+      document.getElementById(
+        "larguraPorta"
+      ).value
+    );
+
+  /*
+  FIXOS
+  */
+
+  const peDireito = 3000;
+
+  const comprimentoSala =
+    entradaComprimento +
+    saidaComprimento +
+    gmgComprimento +
+    800;
+
+  const larguraSala =
+    gmgLargura + 2200;
+
+  /*
+  COORDENADAS
+  */
+
+  const potenciaX = 600;
+  const potenciaY = 35;
+
+  const gmgLarguraX = 120;
+  const gmgLarguraY = 400;
+
+  const gmgComprimentoX = 250;
+  const gmgComprimentoY = 400;
+
+  const entradaLarguraX = 100;
+  const entradaLarguraY = 350;
+
+  const entradaComprimentoX = 200;
+  const entradaComprimentoY = 350;
+
+  const entradaAlturaX = 300;
+  const entradaAlturaY = 350;
+
+  const saidaLarguraX = 100;
+  const saidaLarguraY = 300;
+
+  const saidaComprimentoX = 200;
+  const saidaComprimentoY = 300;
+
+  const saidaAlturaX = 300;
+  const saidaAlturaY = 300;
+
+  const peDireitoX = 100;
+  const peDireitoY = 250;
+
+  const larguraSalaX = 200;
+  const larguraSalaY = 250;
+
+  const comprimentoSalaX = 300;
+  const comprimentoSalaY = 250;
+
+  const larguraPortaX = 400;
+  const larguraPortaY = 250;
+
+  /*
+  PDF
+  */
+
+  const existingPdfBytes =
+    await fetch(
+      "OK - LAYOUT SALA - GMG ABERTO COM KIT ATENUAÇÃO.pdf"
+    ).then(res => res.arrayBuffer());
+
+  const pdfDoc =
+    await PDFLib.PDFDocument.load(
+      existingPdfBytes
+    );
+
+  const page =
+    pdfDoc.getPages()[0];
+
+  const black =
+    PDFLib.rgb(0,0,0);
+
+  const font =
+    await pdfDoc.embedFont(
+      PDFLib.StandardFonts.Helvetica
+    );
+
+  /*
+  TITULO
+  */
+
+  page.drawText(
+    `OK - LAYOUT SALA - GMG ABERTO COM KIT ATENUAÇÃO ${potencia}KVA`,
+    {
+      x:potenciaX,
+      y:potenciaY,
+      size:8,
+      rotate: PDFLib.degrees(0),
+      font:font,
+      color:black
+    }
+  );
+
+  /*
+  GERADOR
+  */
+
+  page.drawText(
+    String(gmgLargura),
+    {
+      x:gmgLarguraX,
+      y:gmgLarguraY,
+      size:8,
+      rotate: PDFLib.degrees(0),
+      font:font,
+      color:black
+    }
+  );
+
+  page.drawText(
+    String(gmgComprimento),
+    {
+      x:gmgComprimentoX,
+      y:gmgComprimentoY,
+      size:8,
+      rotate: PDFLib.degrees(0),
+      font:font,
+      color:black
+    }
+  );
+
+  /*
+  ATENUADOR ENTRADA
+  */
+
+  page.drawText(
+    String(entradaLargura),
+    {
+      x:entradaLarguraX,
+      y:entradaLarguraY,
+      size:8,
+      rotate: PDFLib.degrees(0),
+      font:font,
+      color:black
+    }
+  );
+
+  page.drawText(
+    String(entradaComprimento),
+    {
+      x:entradaComprimentoX,
+      y:entradaComprimentoY,
+      size:8,
+      rotate: PDFLib.degrees(0),
+      font:font,
+      color:black
+    }
+  );
+
+  page.drawText(
+    String(entradaAltura),
+    {
+      x:entradaAlturaX,
+      y:entradaAlturaY,
+      size:8,
+      rotate: PDFLib.degrees(0),
+      font:font,
+      color:black
+    }
+  );
+
+  /*
+  ATENUADOR SAIDA
+  */
+
+  page.drawText(
+    String(saidaLargura),
+    {
+      x:saidaLarguraX,
+      y:saidaLarguraY,
+      size:8,
+      rotate: PDFLib.degrees(0),
+      font:font,
+      color:black
+    }
+  );
+
+  page.drawText(
+    String(saidaComprimento),
+    {
+      x:saidaComprimentoX,
+      y:saidaComprimentoY,
+      size:8,
+      rotate: PDFLib.degrees(0),
+      font:font,
+      color:black
+    }
+  );
+
+  page.drawText(
+    String(saidaAltura),
+    {
+      x:saidaAlturaX,
+      y:saidaAlturaY,
+      size:8,
+      rotate: PDFLib.degrees(0),
+      font:font,
+      color:black
+    }
+  );
+
+  /*
+  SALA
+  */
+
+  page.drawText(
+    String(peDireito),
+    {
+      x:peDireitoX,
+      y:peDireitoY,
+      size:8,
+      rotate: PDFLib.degrees(0),
+      font:font,
+      color:black
+    }
+  );
+
+  page.drawText(
+    String(larguraSala),
+    {
+      x:larguraSalaX,
+      y:larguraSalaY,
+      size:8,
+      rotate: PDFLib.degrees(0),
+      font:font,
+      color:black
+    }
+  );
+
+  page.drawText(
+    String(comprimentoSala),
+    {
+      x:comprimentoSalaX,
+      y:comprimentoSalaY,
+      size:8,
+      rotate: PDFLib.degrees(0),
+      font:font,
+      color:black
+    }
+  );
+
+  page.drawText(
+    String(larguraPorta),
+    {
+      x:larguraPortaX,
+      y:larguraPortaY,
+      size:8,
+      rotate: PDFLib.degrees(0),
+      font:font,
+      color:black
+    }
+  );
+
+  /*
+  SALVAR
+  */
+
+  const pdfBytes =
+    await pdfDoc.save();
+
+  download(
+    pdfBytes,
+    `LAYOUT_SALA_${potencia}KVA.pdf`,
+    "application/pdf"
+  );
+
+}
+
+</script>
+
+</body>
+
+</html>
