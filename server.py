@@ -1,6 +1,7 @@
 from flask import Flask
 import threading
 import os
+import time
 
 import bot
 
@@ -32,14 +33,29 @@ def home():
 
 def run_bot():
 
+    print(
+        "INICIANDO LOOP BOT..."
+    )
+
     bot.start_bot()
 
 # =====================================================
+# THREAD
+# =====================================================
 
-threading.Thread(
+thread_bot = threading.Thread(
+
     target=run_bot,
+
     daemon=True
-).start()
+
+)
+
+thread_bot.start()
+
+print(
+    "THREAD BOT INICIADA"
+)
 
 # =====================================================
 
@@ -50,6 +66,10 @@ if __name__ == "__main__":
             "PORT",
             10000
         )
+    )
+
+    print(
+        f"FLASK PORTA {port}"
     )
 
     app.run(
