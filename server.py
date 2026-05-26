@@ -37,16 +37,18 @@ def iniciar_bot():
 
     asyncio.set_event_loop(loop)
 
- loop.run_until_complete(
-        loop_bot()
-    )
+    try:
 
-except Exception as e:
+        loop.run_until_complete(
+            loop_bot()
+        )
 
-    print(
-        "ERRO BOT:",
-        e
-    )
+    except Exception as e:
+
+        print(
+            "ERRO BOT:",
+            e
+        )
 
 # =====================================================
 # START THREAD
