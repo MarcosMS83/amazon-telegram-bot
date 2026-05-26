@@ -1,11 +1,10 @@
 import asyncio
 import os
 import requests
-import re
+import random
 
 from telegram import Bot
 from dotenv import load_dotenv
-from bs4 import BeautifulSoup
 
 # =====================================================
 # ENV
@@ -33,219 +32,115 @@ bot = Bot(
 )
 
 # =====================================================
-# RSS
-# =====================================================
-
-RSS_URL = (
-    "https://www.pelando.com.br/rss"
-)
-
-# =====================================================
 # CACHE
 # =====================================================
 
 enviados = {}
 
 # =====================================================
-# BUSCAR PROMOÇÕES
+# AMAZON MOCK
 # =====================================================
 
-def buscar_promocoes():
+amazon_produtos = [
+
+    {
+        "titulo":
+        "Echo Dot 5ª Geração",
+
+        "preco":
+        "299",
+
+        "imagem":
+        "https://m.media-amazon.com/images/I/61EXU8BuGZL._AC_SL1000_.jpg",
+
+        "link":
+        f"https://www.amazon.com.br/dp/B09B8VGCR8?tag={AMAZON_TAG}",
+
+        "tipo":
+        "amazon"
+    },
+
+    {
+        "titulo":
+        "Fire TV Stick",
+
+        "preco":
+        "249",
+
+        "imagem":
+        "https://m.media-amazon.com/images/I/51kkwT7uQtL._AC_SL1000_.jpg",
+
+        "link":
+        f"https://www.amazon.com.br/dp/B08C1W5N87?tag={AMAZON_TAG}",
+
+        "tipo":
+        "amazon"
+    }
+
+]
+
+# =====================================================
+# MERCADO LIVRE API
+# =====================================================
+
+def buscar_mercado_livre():
 
     produtos = []
 
-    print(
-        "INICIANDO RSS..."
-    )
-
     try:
+
+        url = (
+            "https://api.mercadolibre.com/"
+            "sites/MLB/search?q=iphone"
+        )
 
         response = requests.get(
 
-            RSS_URL,
+            url,
 
-            headers={
-
-                "User-Agent":
-                "Mozilla/5.0",
-
-                "Accept":
-                "application/rss+xml, application/xml",
-
-                "Connection":
-                "close"
-
-            },
-
-            timeout=(5, 15),
-
-            allow_redirects=True
+            timeout=20
 
         )
 
         print(
-            f"RSS STATUS: "
+            f"ML STATUS: "
             f"{response.status_code}"
         )
 
-        soup = BeautifulSoup(
+        data = response.json()
 
-            response.text,
+        for item in data["results"][:5]:
 
-            "xml"
+            produtos.append({
 
-        )
+                "titulo":
+                item["title"],
 
-        items = soup.find_all(
-            "item"
-        )
+                "preco":
+                str(item["price"]),
+
+                "imagem":
+                item["thumbnail"],
+
+                "link":
+                item["permalink"],
+
+                "tipo":
+                "mercadolivre"
+
+            })
 
         print(
-            f"RSS ITEMS: "
-            f"{len(items)}"
+            f"ML PRODUTOS: "
+            f"{len(produtos)}"
         )
-
-        for item in items[:20]:
-
-            try:
-
-                titulo = item.title.text
-
-                link = item.link.text
-
-                descricao = ""
-
-                if item.description:
-
-                    descricao = item.description.text
-
-                texto = (
-                    titulo + " " + descricao
-                ).lower()
-
-                # =================================================
-                # AMAZON
-                # =================================================
-
-                tipo = None
-
-                if (
-                    "amazon" in texto
-                ):
-
-                    tipo = "amazon"
-
-                # =================================================
-                # MERCADO LIVRE
-                # =================================================
-
-                elif (
-
-                    "mercado livre" in texto
-                    or "mercadolivre" in texto
-                    or "meli" in texto
-
-                ):
-
-                    tipo = "mercadolivre"
-
-                else:
-
-                    continue
-
-                print(
-                    f"PROMO: {titulo}"
-                )
-
-                # =================================================
-                # IMAGEM
-                # =================================================
-
-                imagem = None
-
-                img = item.find("enclosure")
-
-                if img:
-
-                    imagem = img.get("url")
-
-                # =================================================
-                # PREÇO
-                # =================================================
-
-                preco = "0"
-
-                preco_match = re.search(
-
-                    r'R\\$\\s?[\\d\\.,]+',
-
-                    descricao
-
-                )
-
-                if preco_match:
-
-                    preco = (
-                        preco_match.group(0)
-                        .replace("R$", "")
-                        .strip()
-                    )
-
-                # =================================================
-                # TAG AMAZON
-                # =================================================
-
-                if tipo == "amazon":
-
-                    asin_match = re.search(
-
-                        r'/dp/([A-Z0-9]{10})',
-
-                        link
-
-                    )
-
-                    if asin_match:
-
-                        asin = asin_match.group(1)
-
-                        link = (
-                            f"https://www.amazon.com.br/dp/{asin}"
-                            f"?tag={AMAZON_TAG}"
-                        )
-
-                produtos.append({
-
-                    "titulo": titulo,
-
-                    "preco": preco,
-
-                    "imagem": imagem,
-
-                    "link": link,
-
-                    "tipo": tipo
-
-                })
-
-            except Exception as e:
-
-                print(
-                    "ERRO ITEM:",
-                    e
-                )
 
     except Exception as e:
 
         print(
-            "ERRO RSS:",
+            "ERRO ML:",
             e
         )
-
-    print(
-        f"TOTAL PROMOS: "
-        f"{len(produtos)}"
-    )
 
     return produtos
 
@@ -255,13 +150,9 @@ def buscar_promocoes():
 
 async def enviar_produto(produto):
 
-    emoji = "🟦"
+    emoji = "🟧"
 
-    if produto["tipo"] == "amazon":
-
-        emoji = "🟧"
-
-    elif produto["tipo"] == "mercadolivre":
+    if produto["tipo"] == "mercadolivre":
 
         emoji = "🟨"
 
@@ -280,39 +171,15 @@ async def enviar_produto(produto):
 
     try:
 
-        if produto["imagem"]:
+        await bot.send_photo(
 
-            await asyncio.wait_for(
+            chat_id=CHAT_ID,
 
-                bot.send_photo(
+            photo=produto["imagem"],
 
-                    chat_id=CHAT_ID,
+            caption=texto
 
-                    photo=produto["imagem"],
-
-                    caption=texto
-
-                ),
-
-                timeout=30
-
-            )
-
-        else:
-
-            await asyncio.wait_for(
-
-                bot.send_message(
-
-                    chat_id=CHAT_ID,
-
-                    text=texto
-
-                ),
-
-                timeout=30
-
-            )
+        )
 
         print(
             "PROMO ENVIADA"
@@ -339,21 +206,25 @@ async def loop_bot():
 
         try:
 
-            produtos = buscar_promocoes()
+            produtos = []
 
-            agora = asyncio.get_event_loop().time()
+            # AMAZON
+            produtos.extend(
+                random.sample(
+                    amazon_produtos,
+                    len(amazon_produtos)
+                )
+            )
 
-            expirados = []
+            # MERCADO LIVRE
+            produtos.extend(
+                buscar_mercado_livre()
+            )
 
-            for k, v in enviados.items():
-
-                if agora - v > 43200:
-
-                    expirados.append(k)
-
-            for k in expirados:
-
-                del enviados[k]
+            print(
+                f"TOTAL PRODUTOS: "
+                f"{len(produtos)}"
+            )
 
             for produto in produtos:
 
@@ -367,7 +238,7 @@ async def loop_bot():
 
                 enviados[
                     produto["link"]
-                ] = agora
+                ] = True
 
                 await asyncio.sleep(15)
 
