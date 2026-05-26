@@ -5,7 +5,7 @@ from telegram import Bot
 from dotenv import load_dotenv
 
 # =====================================================
-# ENV
+# LOAD ENV
 # =====================================================
 
 load_dotenv()
@@ -44,11 +44,18 @@ async def loop_bot():
                 "ENVIANDO TESTE TELEGRAM..."
             )
 
-            await bot.send_message(
+            await asyncio.wait_for(
 
-                chat_id=CHAT_ID,
+                bot.send_message(
 
-                text="✅ BOT ONLINE"
+                    chat_id=CHAT_ID,
+
+                    text="✅ BOT ONLINE"
+
+                ),
+
+                timeout=20
+
             )
 
             print(
