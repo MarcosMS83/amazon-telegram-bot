@@ -3,7 +3,6 @@ import os
 import requests
 
 from dotenv import load_dotenv
-from telegram import Bot
 
 # =====================================================
 # ENV
@@ -15,10 +14,8 @@ BOT_TOKEN = os.getenv(
     "TELEGRAM_BOT_TOKEN"
 )
 
-CHAT_ID = int(
-    os.getenv(
-        "TELEGRAM_CHAT_ID"
-    )
+CHAT_ID = os.getenv(
+    "TELEGRAM_CHAT_ID"
 )
 
 AMAZON_TAG = os.getenv(
@@ -75,7 +72,7 @@ amazon_produtos = [
 ]
 
 # =====================================================
-# ML API
+# MERCADO LIVRE
 # =====================================================
 
 def buscar_mercado_livre():
@@ -97,12 +94,7 @@ def buscar_mercado_livre():
 
             url,
 
-            timeout=(5, 15),
-
-            headers={
-                "User-Agent":
-                "Mozilla/5.0"
-            }
+            timeout=(5, 15)
 
         )
 
@@ -152,7 +144,7 @@ def buscar_mercado_livre():
 # TELEGRAM
 # =====================================================
 
-async def enviar_produto(bot, produto):
+def enviar_telegram(produto):
 
     emoji = "🟧"
 
@@ -180,30 +172,37 @@ async def enviar_produto(bot, produto):
             f"{produto['titulo']}"
         )
 
-        if produto["imagem"]:
+        url = (
+            f"https://api.telegram.org/bot"
+            f"{BOT_TOKEN}/sendPhoto"
+        )
 
-            await bot.send_photo(
+        payload = {
 
-                chat_id=CHAT_ID,
+            "chat_id":
+            CHAT_ID,
 
-                photo=produto["imagem"],
+            "photo":
+            produto["imagem"],
 
-                caption=texto
+            "caption":
+            texto
 
-            )
+        }
 
-        else:
+        response = requests.post(
 
-            await bot.send_message(
+            url,
 
-                chat_id=CHAT_ID,
+            data=payload,
 
-                text=texto
+            timeout=(5, 20)
 
-            )
+        )
 
         print(
-            "PROMO ENVIADA"
+            f"TELEGRAM STATUS: "
+            f"{response.status_code}"
         )
 
     except Exception as e:
@@ -223,10 +222,6 @@ async def loop_bot():
         "LOOP BOT INICIADO"
     )
 
-    bot = Bot(
-        token=BOT_TOKEN
-    )
-
     while True:
 
         try:
@@ -242,7 +237,7 @@ async def loop_bot():
 
                 produtos.append(p)
 
-            # MERCADO LIVRE
+            # ML
             produtos_ml = buscar_mercado_livre()
 
             for p in produtos_ml:
@@ -260,8 +255,7 @@ async def loop_bot():
 
                     continue
 
-                await enviar_produto(
-                    bot,
+                enviar_telegram(
                     produto
                 )
 
