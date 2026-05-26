@@ -1,4 +1,7 @@
+import feedparser
 import requests
+import re
+
 from bs4 import BeautifulSoup
 
 # =====================================================
@@ -8,39 +11,51 @@ from bs4 import BeautifulSoup
 TAG = "promodudia-20"
 
 # =====================================================
-# BUSCAR PROMOÇÕES AMAZON
+# RSS PROMOBIT
+# =====================================================
+
+RSS_URL = (
+    "https://www.promobit.com.br/feed/"
+)
+
+# =====================================================
+# BUSCAR PROMOÇÕES
 # =====================================================
 
 def buscar_promocoes_amazon():
 
     produtos = []
 
-    headers = {
+    feed = feedparser.parse(
+        RSS_URL
+    )
 
-        "User-Agent":
-        "Mozilla/5.0"
+    print(
+        f"PROMOÇÕES RSS: {len(feed.entries)}"
+    )
 
-    }
-
-    urls = [
-
-        "https://www.amazon.com.br/deals",
-
-        "https://www.amazon.com.br/gp/goldbox"
-
-    ]
-
-    for url in urls:
+    for entry in feed.entries[:20]:
 
         try:
 
+            titulo = entry.title
+
+            link_post = entry.link
+
+            # =========================================
+            # ABRE POST
+            # =========================================
+
             response = requests.get(
 
-                url,
+                link_post,
 
-                headers=headers,
+                timeout=20,
 
-                timeout=20
+                headers={
+                    "User-Agent":
+                    "Mozilla/5.0"
+                }
 
             )
 
@@ -52,90 +67,115 @@ def buscar_promocoes_amazon():
 
             )
 
-            produtos_html = soup.select(
-                "div[data-asin]"
+            # =========================================
+            # PROCURA AMAZON
+            # =========================================
+
+            links = soup.find_all(
+                "a",
+                href=True
             )
 
-            for item in produtos_html[:10]:
+            amazon_link = None
 
-                try:
+            for a in links:
 
-                    asin = item.get(
-                        "data-asin"
-                    )
+                href = a["href"]
 
-                    if not asin:
-                        continue
+                if (
+                    "amazon.com.br" in href
+                    or "amzn.to" in href
+                ):
 
-                    titulo_tag = item.select_one(
-                        "span"
-                    )
+                    amazon_link = href
+                    break
 
-                    titulo = (
-                        titulo_tag.text.strip()
-                        if titulo_tag
-                        else "Produto Amazon"
-                    )
+            if not amazon_link:
+                continue
 
-                    imagem_tag = item.select_one(
-                        "img"
-                    )
+            # =========================================
+            # EXTRAI ASIN
+            # =========================================
 
-                    imagem = (
-                        imagem_tag.get("src")
-                        if imagem_tag
-                        else None
-                    )
+            asin_match = re.search(
 
-                    preco = "0"
+                r'/dp/([A-Z0-9]{10})',
 
-                    texto = item.get_text()
+                amazon_link
 
-                    import re
+            )
 
-                    preco_match = re.search(
+            if asin_match:
 
-                        r'R\\$\\s?[\\d\\.,]+',
+                asin = asin_match.group(1)
 
-                        texto
+                amazon_link = (
+                    f"https://www.amazon.com.br/dp/{asin}"
+                    f"?tag={TAG}"
+                )
 
-                    )
+            # =========================================
+            # IMAGEM
+            # =========================================
 
-                    if preco_match:
+            imagem = None
 
-                        preco = (
-                            preco_match.group(0)
-                            .replace("R$", "")
-                            .strip()
-                        )
+            img = soup.find("img")
 
-                    link = (
-                        f"https://www.amazon.com.br/dp/{asin}"
-                        f"?tag={TAG}"
-                    )
+            if img:
 
-                    produtos.append({
+                imagem = img.get("src")
 
-                        "titulo": titulo,
+            # =========================================
+            # PREÇO
+            # =========================================
 
-                        "preco": preco,
+            preco = "0"
 
-                        "imagem": imagem,
+            preco_match = re.search(
 
-                        "link": link,
+                r'R\\$\\s?[\\d\\.,]+',
 
-                        "origem": "Amazon"
+                soup.get_text()
 
-                    })
+            )
 
-                except:
-                    pass
+            if preco_match:
+
+                preco = (
+                    preco_match.group(0)
+                    .replace("R$", "")
+                    .strip()
+                )
+
+            produtos.append({
+
+                "titulo": titulo,
+
+                "preco": preco,
+
+                "imagem": imagem,
+
+                "link": amazon_link,
+
+                "origem": "Promobit"
+
+            })
+
+            print(
+                "PROMOÇÃO:",
+                titulo
+            )
 
         except Exception as e:
 
             print(
-                "ERRO AMAZON:",
+                "ERRO PROMO:",
                 e
             )
+
+    print(
+        f"TOTAL AMAZON: {len(produtos)}"
+    )
 
     return produtos
