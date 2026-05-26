@@ -1,10 +1,9 @@
 import asyncio
 import os
 import requests
-import random
 
-from telegram import Bot
 from dotenv import load_dotenv
+from telegram import Bot
 
 # =====================================================
 # ENV
@@ -27,10 +26,6 @@ AMAZON_TAG = os.getenv(
     "promodudia-20"
 )
 
-bot = Bot(
-    token=BOT_TOKEN
-)
-
 # =====================================================
 # CACHE
 # =====================================================
@@ -38,14 +33,14 @@ bot = Bot(
 enviados = {}
 
 # =====================================================
-# AMAZON MOCK
+# AMAZON
 # =====================================================
 
 amazon_produtos = [
 
     {
         "titulo":
-        "Echo Dot 5ª Geração",
+        "Echo Dot 5ª Geração Alexa",
 
         "preco":
         "299",
@@ -62,7 +57,7 @@ amazon_produtos = [
 
     {
         "titulo":
-        "Fire TV Stick",
+        "Fire TV Stick Amazon",
 
         "preco":
         "249",
@@ -80,7 +75,7 @@ amazon_produtos = [
 ]
 
 # =====================================================
-# MERCADO LIVRE API
+# ML API
 # =====================================================
 
 def buscar_mercado_livre():
@@ -88,6 +83,10 @@ def buscar_mercado_livre():
     produtos = []
 
     try:
+
+        print(
+            "CONSULTANDO ML..."
+        )
 
         url = (
             "https://api.mercadolibre.com/"
@@ -98,7 +97,12 @@ def buscar_mercado_livre():
 
             url,
 
-            timeout=20
+            timeout=(5, 15),
+
+            headers={
+                "User-Agent":
+                "Mozilla/5.0"
+            }
 
         )
 
@@ -148,7 +152,7 @@ def buscar_mercado_livre():
 # TELEGRAM
 # =====================================================
 
-async def enviar_produto(produto):
+async def enviar_produto(bot, produto):
 
     emoji = "🟧"
 
@@ -171,15 +175,32 @@ async def enviar_produto(produto):
 
     try:
 
-        await bot.send_photo(
-
-            chat_id=CHAT_ID,
-
-            photo=produto["imagem"],
-
-            caption=texto
-
+        print(
+            f"ENVIANDO: "
+            f"{produto['titulo']}"
         )
+
+        if produto["imagem"]:
+
+            await bot.send_photo(
+
+                chat_id=CHAT_ID,
+
+                photo=produto["imagem"],
+
+                caption=texto
+
+            )
+
+        else:
+
+            await bot.send_message(
+
+                chat_id=CHAT_ID,
+
+                text=texto
+
+            )
 
         print(
             "PROMO ENVIADA"
@@ -202,24 +223,31 @@ async def loop_bot():
         "LOOP BOT INICIADO"
     )
 
+    bot = Bot(
+        token=BOT_TOKEN
+    )
+
     while True:
 
         try:
 
+            print(
+                "MONTANDO PRODUTOS..."
+            )
+
             produtos = []
 
             # AMAZON
-            produtos.extend(
-                random.sample(
-                    amazon_produtos,
-                    len(amazon_produtos)
-                )
-            )
+            for p in amazon_produtos:
+
+                produtos.append(p)
 
             # MERCADO LIVRE
-            produtos.extend(
-                buscar_mercado_livre()
-            )
+            produtos_ml = buscar_mercado_livre()
+
+            for p in produtos_ml:
+
+                produtos.append(p)
 
             print(
                 f"TOTAL PRODUTOS: "
@@ -233,6 +261,7 @@ async def loop_bot():
                     continue
 
                 await enviar_produto(
+                    bot,
                     produto
                 )
 
@@ -240,7 +269,7 @@ async def loop_bot():
                     produto["link"]
                 ] = True
 
-                await asyncio.sleep(15)
+                await asyncio.sleep(10)
 
         except Exception as e:
 
