@@ -2,10 +2,11 @@ from flask import Flask
 import threading
 import asyncio
 import os
-import time
+
+from bot import loop_bot
 
 # =====================================================
-# APP
+# FLASK
 # =====================================================
 
 app = Flask(__name__)
@@ -23,27 +24,13 @@ def home():
     }
 
 # =====================================================
-# LOOP TESTE
-# =====================================================
-
-async def teste_loop():
-
-    while True:
-
-        print(
-            "BOT LOOP ATIVO"
-        )
-
-        await asyncio.sleep(30)
-
-# =====================================================
-# THREAD
+# THREAD BOT
 # =====================================================
 
 def iniciar_bot():
 
     print(
-        "INICIANDO THREAD BOT"
+        "INICIANDO BOT..."
     )
 
     loop = asyncio.new_event_loop()
@@ -51,7 +38,7 @@ def iniciar_bot():
     asyncio.set_event_loop(loop)
 
     loop.run_until_complete(
-        teste_loop()
+        loop_bot()
     )
 
 # =====================================================
@@ -71,7 +58,7 @@ print(
 )
 
 # =====================================================
-# START FLASK
+# FLASK
 # =====================================================
 
 if __name__ == "__main__":
@@ -84,7 +71,7 @@ if __name__ == "__main__":
     )
 
     print(
-        f"PORTA {port}"
+        f"PORTA: {port}"
     )
 
     app.run(
