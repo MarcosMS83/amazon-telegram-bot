@@ -1,7 +1,6 @@
 import asyncio
 import os
 import requests
-import feedparser
 import re
 
 from telegram import Bot
