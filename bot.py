@@ -65,7 +65,7 @@ async def loop_bot():
                 e
             )
 
-        await asyncio.sleep(3600)
+        await asyncio.sleep(600)
 
 # =====================================================
 # START
