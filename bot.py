@@ -55,132 +55,70 @@ def buscar_promocoes():
 
     produtos = []
 
+    print(
+        "INICIANDO RSS..."
+    )
+
     try:
 
-        feed = feedparser.parse(
-            RSS_URL
+        response = requests.get(
+
+            RSS_URL,
+
+            timeout=20,
+
+            headers={
+                "User-Agent":
+                "Mozilla/5.0"
+            }
+
         )
 
         print(
-            f"RSS ENTRIES: "
-            f"{len(feed.entries)}"
+            f"RSS STATUS: "
+            f"{response.status_code}"
         )
 
-        for entry in feed.entries[:20]:
+        soup = BeautifulSoup(
+
+            response.text,
+
+            "xml"
+
+        )
+
+        items = soup.find_all(
+            "item"
+        )
+
+        print(
+            f"RSS ITEMS: "
+            f"{len(items)}"
+        )
+
+        for item in items[:10]:
 
             try:
 
-                titulo = entry.title
+                titulo = item.title.text
 
-                link_post = entry.link
+                link = item.link.text
 
                 print(
-                    f"ANALISANDO: {titulo}"
+                    f"POST: {titulo}"
                 )
-
-                response = requests.get(
-
-                    link_post,
-
-                    timeout=20,
-
-                    headers={
-                        "User-Agent":
-                        "Mozilla/5.0"
-                    }
-
-                )
-
-                soup = BeautifulSoup(
-
-                    response.text,
-
-                    "html.parser"
-
-                )
-
-                links = soup.find_all(
-                    "a",
-                    href=True
-                )
-
-                amazon_link = None
-
-                for a in links:
-
-                    href = a["href"]
-
-                    if (
-                        "amazon.com.br" in href
-                        or "amzn.to" in href
-                    ):
-
-                        amazon_link = href
-                        break
-
-                if not amazon_link:
-
-                    continue
-
-                asin_match = re.search(
-
-                    r'/dp/([A-Z0-9]{10})',
-
-                    amazon_link
-
-                )
-
-                if asin_match:
-
-                    asin = asin_match.group(1)
-
-                    amazon_link = (
-                        f"https://www.amazon.com.br/dp/{asin}"
-                        f"?tag={TAG}"
-                    )
-
-                preco = "0"
-
-                preco_match = re.search(
-
-                    r'R\\$\\s?[\\d\\.,]+',
-
-                    soup.get_text()
-
-                )
-
-                if preco_match:
-
-                    preco = (
-                        preco_match.group(0)
-                        .replace("R$", "")
-                        .strip()
-                    )
-
-                imagem = None
-
-                img = soup.find("img")
-
-                if img:
-
-                    imagem = img.get("src")
 
                 produtos.append({
 
                     "titulo": titulo,
 
-                    "preco": preco,
+                    "preco": "0",
 
-                    "imagem": imagem,
+                    "imagem": None,
 
-                    "link": amazon_link
+                    "link": link
 
                 })
-
-                print(
-                    f"PROMO ENCONTRADA: "
-                    f"{titulo}"
-                )
 
             except Exception as e:
 
@@ -197,7 +135,7 @@ def buscar_promocoes():
         )
 
     print(
-        f"TOTAL PROMOS: "
+        f"TOTAL PRODUTOS: "
         f"{len(produtos)}"
     )
 
