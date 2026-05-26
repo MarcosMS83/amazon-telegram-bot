@@ -59,7 +59,9 @@ def buscar_promocoes():
     )
 
     try:
-
+print(
+    f"URL RSS: {RSS_URL}"
+)
       response = requests.get(
 
     RSS_URL,
