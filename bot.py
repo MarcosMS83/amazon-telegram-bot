@@ -23,7 +23,7 @@ CHAT_ID = int(
     )
 )
 
-TAG = os.getenv(
+AMAZON_TAG = os.getenv(
     "AMAZON_ASSOCIATE_TAG",
     "promodudia-20"
 )
@@ -33,11 +33,11 @@ bot = Bot(
 )
 
 # =====================================================
-# RSS PROMOBIT
+# RSS
 # =====================================================
 
 RSS_URL = (
-    "https://www.promobit.com.br/feed/"
+    "https://www.pelando.com.br/rss"
 )
 
 # =====================================================
@@ -59,31 +59,29 @@ def buscar_promocoes():
     )
 
     try:
-print(
-    f"URL RSS: {RSS_URL}"
-)
-      response = requests.get(
 
-    RSS_URL,
+        response = requests.get(
 
-    headers={
+            RSS_URL,
 
-        "User-Agent":
-        "Mozilla/5.0",
+            headers={
 
-        "Accept":
-        "application/rss+xml, application/xml",
+                "User-Agent":
+                "Mozilla/5.0",
 
-        "Connection":
-        "close"
+                "Accept":
+                "application/rss+xml, application/xml",
 
-    },
+                "Connection":
+                "close"
 
-    timeout=(5, 15),
+            },
 
-    allow_redirects=True
+            timeout=(5, 15),
 
-)
+            allow_redirects=True
+
+        )
 
         print(
             f"RSS STATUS: "
@@ -107,7 +105,7 @@ print(
             f"{len(items)}"
         )
 
-        for item in items[:10]:
+        for item in items[:20]:
 
             try:
 
@@ -115,19 +113,118 @@ print(
 
                 link = item.link.text
 
+                descricao = ""
+
+                if item.description:
+
+                    descricao = item.description.text
+
+                texto = (
+                    titulo + " " + descricao
+                ).lower()
+
+                # =================================================
+                # AMAZON
+                # =================================================
+
+                tipo = None
+
+                if (
+                    "amazon" in texto
+                ):
+
+                    tipo = "amazon"
+
+                # =================================================
+                # MERCADO LIVRE
+                # =================================================
+
+                elif (
+
+                    "mercado livre" in texto
+                    or "mercadolivre" in texto
+                    or "meli" in texto
+
+                ):
+
+                    tipo = "mercadolivre"
+
+                else:
+
+                    continue
+
                 print(
-                    f"POST: {titulo}"
+                    f"PROMO: {titulo}"
                 )
+
+                # =================================================
+                # IMAGEM
+                # =================================================
+
+                imagem = None
+
+                img = item.find("enclosure")
+
+                if img:
+
+                    imagem = img.get("url")
+
+                # =================================================
+                # PREÇO
+                # =================================================
+
+                preco = "0"
+
+                preco_match = re.search(
+
+                    r'R\\$\\s?[\\d\\.,]+',
+
+                    descricao
+
+                )
+
+                if preco_match:
+
+                    preco = (
+                        preco_match.group(0)
+                        .replace("R$", "")
+                        .strip()
+                    )
+
+                # =================================================
+                # TAG AMAZON
+                # =================================================
+
+                if tipo == "amazon":
+
+                    asin_match = re.search(
+
+                        r'/dp/([A-Z0-9]{10})',
+
+                        link
+
+                    )
+
+                    if asin_match:
+
+                        asin = asin_match.group(1)
+
+                        link = (
+                            f"https://www.amazon.com.br/dp/{asin}"
+                            f"?tag={AMAZON_TAG}"
+                        )
 
                 produtos.append({
 
                     "titulo": titulo,
 
-                    "preco": "0",
+                    "preco": preco,
 
-                    "imagem": None,
+                    "imagem": imagem,
 
-                    "link": link
+                    "link": link,
+
+                    "tipo": tipo
 
                 })
 
@@ -146,20 +243,32 @@ print(
         )
 
     print(
-        f"TOTAL PRODUTOS: "
+        f"TOTAL PROMOS: "
         f"{len(produtos)}"
     )
 
     return produtos
 
 # =====================================================
-# ENVIAR TELEGRAM
+# TELEGRAM
 # =====================================================
 
 async def enviar_produto(produto):
 
+    emoji = "🟦"
+
+    if produto["tipo"] == "amazon":
+
+        emoji = "🟧"
+
+    elif produto["tipo"] == "mercadolivre":
+
+        emoji = "🟨"
+
     texto = f"""
-🔥 PROMOÇÃO AMAZON
+🔥 PROMOÇÃO
+
+{emoji} Loja: {produto['tipo'].upper()}
 
 📦 {produto['titulo']}
 
