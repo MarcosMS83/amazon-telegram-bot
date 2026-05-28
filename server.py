@@ -1,28 +1,10 @@
-from flask import Flask
-import threading
-import asyncio
 import os
+import asyncio
+import threading
 
-# =====================================================
-# IMPORT BOT
-# =====================================================
+from flask import Flask
 
-try:
-
-    from bot import main
-
-    print(
-        "BOT IMPORTADO COM SUCESSO"
-    )
-
-except Exception as e:
-
-    print(
-        "ERRO IMPORT BOT:",
-        e
-    )
-
-    main = None
+from bot import main
 
 # =====================================================
 # FLASK
@@ -30,20 +12,14 @@ except Exception as e:
 
 app = Flask(__name__)
 
-# =====================================================
-# HOME
-# =====================================================
-
 @app.route("/")
 
 def home():
 
-    return {
-        "status": "online"
-    }
+    return "BOT ONLINE"
 
 # =====================================================
-# THREAD BOT
+# BOT THREAD
 # =====================================================
 
 def iniciar_bot():
@@ -52,19 +28,17 @@ def iniciar_bot():
         "INICIANDO BOT..."
     )
 
-    if main is None:
-
-        print(
-            "BOT NÃO INICIADO"
-        )
-
-        return
-
     loop = asyncio.new_event_loop()
 
-    asyncio.set_event_loop(loop)
+    asyncio.set_event_loop(
+        loop
+    )
 
     try:
+
+        print(
+            "LOOP BOT INICIADO"
+        )
 
         loop.run_until_complete(
             main()
@@ -73,33 +47,27 @@ def iniciar_bot():
     except Exception as e:
 
         print(
-            "ERRO BOT:",
-            e
+            f"ERRO BOT: "
+            f"{e}"
         )
 
 # =====================================================
-# THREAD
-# =====================================================
-
-threading.Thread(
-
-    target=iniciar_bot,
-
-    daemon=True
-
-).start()
-
-print(
-    "THREAD CRIADA"
-)
-
-# =====================================================
-# START
+# MAIN
 # =====================================================
 
 if __name__ == "__main__":
 
-    port = int(
+    print(
+        "THREAD CRIADA"
+    )
+
+    bot_thread = threading.Thread(
+        target=iniciar_bot
+    )
+
+    bot_thread.start()
+
+    PORT = int(
         os.environ.get(
             "PORT",
             10000
@@ -107,13 +75,18 @@ if __name__ == "__main__":
     )
 
     print(
-        f"PORTA: {port}"
+        f"PORTA: "
+        f"{PORT}"
     )
 
     app.run(
 
         host="0.0.0.0",
 
-        port=port
+        port=PORT,
+
+        debug=False,
+
+        use_reloader=False
 
     )
