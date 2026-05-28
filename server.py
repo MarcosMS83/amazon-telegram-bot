@@ -9,7 +9,7 @@ import os
 
 try:
 
-    from bot import loop_bot
+    from bot import main
 
     print(
         "BOT IMPORTADO COM SUCESSO"
@@ -22,7 +22,7 @@ except Exception as e:
         e
     )
 
-    loop_bot = None
+    main = None
 
 # =====================================================
 # FLASK
@@ -52,7 +52,7 @@ def iniciar_bot():
         "INICIANDO BOT..."
     )
 
-    if loop_bot is None:
+    if main is None:
 
         print(
             "BOT NÃO INICIADO"
@@ -67,7 +67,7 @@ def iniciar_bot():
     try:
 
         loop.run_until_complete(
-            loop_bot()
+            main()
         )
 
     except Exception as e:
@@ -78,7 +78,7 @@ def iniciar_bot():
         )
 
 # =====================================================
-# START THREAD
+# THREAD
 # =====================================================
 
 threading.Thread(
@@ -94,7 +94,7 @@ print(
 )
 
 # =====================================================
-# START FLASK
+# START
 # =====================================================
 
 if __name__ == "__main__":
