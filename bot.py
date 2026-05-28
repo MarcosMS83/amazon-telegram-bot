@@ -1,12 +1,13 @@
 import re
 import os
+import asyncio
 import requests
 
 from telethon import TelegramClient, events
 from dotenv import load_dotenv
 
 # =====================================================
-# ENV
+# LOAD ENV
 # =====================================================
 
 load_dotenv()
@@ -20,8 +21,9 @@ API_HASH = os.getenv(
 )
 
 BOT_TOKEN = os.getenv(
-    "TELEGRAM_BOT_TOKEN")
-    
+    "TELEGRAM_BOT_TOKEN"
+)
+
 CHAT_ID = os.getenv(
     "TELEGRAM_CHAT_ID"
 )
@@ -35,6 +37,10 @@ SOURCE_GROUPS = os.getenv(
     "SOURCE_GROUPS",
     ""
 )
+
+# =====================================================
+# GRUPOS
+# =====================================================
 
 GRUPOS = [
 
@@ -52,7 +58,7 @@ print(
 )
 
 # =====================================================
-# CACHE
+# CACHE LINKS
 # =====================================================
 
 links_enviados = set()
@@ -63,7 +69,7 @@ links_enviados = set()
 
 def extrair_links(texto):
 
-    regex = r'(https?://[^\s]+)'
+    regex = r"(https?://[^\s]+)"
 
     return re.findall(
         regex,
@@ -84,7 +90,7 @@ def adicionar_tag_amazon(link):
 
         asin = re.search(
 
-            r'/dp/([A-Z0-9]{10})',
+            r"/dp/([A-Z0-9]{10})",
 
             link
 
@@ -104,7 +110,7 @@ def adicionar_tag_amazon(link):
     except Exception as e:
 
         print(
-            "ERRO AMAZON TAG:",
+            "ERRO AMAZON:",
             e
         )
 
@@ -168,15 +174,18 @@ async def main():
         "INICIANDO TELETHON..."
     )
 
-    print(
-        os.path.exists(
-            "session.session"
-        )
+    # =================================================
+    # SESSION
+    # =================================================
+
+    existe = os.path.exists(
+        "session.session"
     )
 
-    # =================================================
-    # SESSION FILE
-    # =================================================
+    print(
+        f"SESSION EXISTE: "
+        f"{existe}"
+    )
 
     SESSION_FILE = os.path.join(
         os.getcwd(),
@@ -202,18 +211,61 @@ async def main():
     # CONNECT
     # =================================================
 
-    try:
+    conectado = False
 
-        await client.connect()
+    for tentativa in range(5):
+
+        try:
+
+            print(
+                f"TENTANDO CONECTAR: "
+                f"{tentativa+1}"
+            )
+
+            await asyncio.wait_for(
+
+                client.connect(),
+
+                timeout=20
+
+            )
+
+            print(
+                "CLIENT CONNECTADO"
+            )
+
+            conectado = True
+
+            break
+
+        except Exception as e:
+
+            print(
+                f"ERRO CONEXAO: "
+                f"{e}"
+            )
+
+            await asyncio.sleep(5)
+
+    if not conectado:
 
         print(
-            "CLIENT CONNECTADO"
+            "NAO FOI POSSIVEL CONECTAR"
         )
+
+        return
+
+    # =================================================
+    # AUTH
+    # =================================================
+
+    try:
 
         autorizado = await client.is_user_authorized()
 
         print(
-            f"AUTH: {autorizado}"
+            f"AUTH: "
+            f"{autorizado}"
         )
 
         if not autorizado:
@@ -224,18 +276,18 @@ async def main():
 
             return
 
-        print(
-            "TELETHON ONLINE"
-        )
-
     except Exception as e:
 
         print(
-            "ERRO TELETHON:",
+            "ERRO AUTH:",
             e
         )
 
         return
+
+    print(
+        "TELETHON ONLINE"
+    )
 
     # =================================================
     # EVENTO NOVA MSG
