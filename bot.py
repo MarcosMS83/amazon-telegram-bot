@@ -33,14 +33,24 @@ AMAZON_TAG = os.getenv(
     "promodudia-20"
 )
 
-# =====================================================
-# CLIENT
-# =====================================================
+SOURCE_GROUPS = os.getenv(
+    "SOURCE_GROUPS",
+    ""
+)
 
-client = TelegramClient(
-    "session",
-    API_ID,
-    API_HASH
+GRUPOS = [
+
+    int(g.strip())
+
+    for g in SOURCE_GROUPS.split(",")
+
+    if g.strip()
+
+]
+
+print(
+    f"GRUPOS MONITORADOS: "
+    f"{GRUPOS}"
 )
 
 # =====================================================
@@ -48,20 +58,6 @@ client = TelegramClient(
 # =====================================================
 
 links_enviados = set()
-
-# =====================================================
-# GRUPOS MONITORADOS
-# =====================================================
-
-GRUPOS = [
-
-    "promocoes",
-    "pelando",
-    "ofertas",
-    "achadinhos",
-    "promo"
-
-]
 
 # =====================================================
 # EXTRAIR LINKS
@@ -115,7 +111,7 @@ def adicionar_tag_amazon(link):
     return link
 
 # =====================================================
-# ENVIAR TELEGRAM
+# TELEGRAM BOT API
 # =====================================================
 
 def enviar_mensagem(texto):
@@ -146,7 +142,7 @@ def enviar_mensagem(texto):
 
             data=payload,
 
-            timeout=(5, 20)
+            timeout=(5, 15)
 
         )
 
@@ -163,135 +159,6 @@ def enviar_mensagem(texto):
         )
 
 # =====================================================
-# NOVA MENSAGEM
-# =====================================================
-
-@client.on(events.NewMessage)
-
-async def nova_mensagem(event):
-
-    try:
-
-        chat = await event.get_chat()
-
-        nome = ""
-
-        if hasattr(chat, "title"):
-
-            nome = chat.title.lower()
-
-        print(
-            f"NOVA MSG: {nome}"
-        )
-
-        # =============================================
-        # FILTRO GRUPOS
-        # =============================================
-
-        permitido = False
-
-        for grupo in GRUPOS:
-
-            if grupo in nome:
-
-                permitido = True
-                break
-
-        if not permitido:
-
-            return
-
-        texto = event.raw_text
-
-        if not texto:
-
-            return
-
-        print(
-            "ANALISANDO LINKS..."
-        )
-
-        links = extrair_links(
-            texto
-        )
-
-        print(
-            f"LINKS ENCONTRADOS: "
-            f"{len(links)}"
-        )
-
-        for link in links:
-
-            if link in links_enviados:
-
-                continue
-
-            # =========================================
-            # MARKETPLACES
-            # =========================================
-
-            marketplaces = [
-
-                "amazon",
-                "mercadolivre",
-                "meli",
-                "shopee"
-
-            ]
-
-            valido = False
-
-            for m in marketplaces:
-
-                if m in link.lower():
-
-                    valido = True
-                    break
-
-            if not valido:
-
-                continue
-
-            links_enviados.add(
-                link
-            )
-
-            # =========================================
-            # AMAZON TAG
-            # =========================================
-
-            if "amazon" in link:
-
-                link = adicionar_tag_amazon(
-                    link
-                )
-
-            mensagem = f"""
-🔥 PROMOÇÃO ENCONTRADA
-
-📦 Grupo:
-{nome}
-
-🛒 Link:
-{link}
-"""
-
-            enviar_mensagem(
-                mensagem
-            )
-
-            print(
-                "PROMOÇÃO ENVIADA"
-            )
-
-    except Exception as e:
-
-        print(
-            "ERRO MSG:",
-            e
-        )
-
-# =====================================================
 # MAIN
 # =====================================================
 
@@ -301,6 +168,117 @@ async def main():
         "INICIANDO TELETHON..."
     )
 
+    client = TelegramClient(
+        "session",
+        API_ID,
+        API_HASH
+    )
+
+    # =================================================
+    # EVENTO
+    # =================================================
+
+    @client.on(events.NewMessage)
+
+    async def nova_mensagem(event):
+
+        try:
+
+            if event.chat_id not in GRUPOS:
+
+                return
+
+            print(
+                f"NOVA MSG: "
+                f"{event.chat_id}"
+            )
+
+            texto = event.raw_text
+
+            if not texto:
+
+                return
+
+            links = extrair_links(
+                texto
+            )
+
+            print(
+                f"LINKS: "
+                f"{len(links)}"
+            )
+
+            for link in links:
+
+                if link in links_enviados:
+
+                    continue
+
+                marketplaces = [
+
+                    "amazon",
+                    "mercadolivre",
+                    "meli",
+                    "shopee"
+
+                ]
+
+                valido = False
+
+                for m in marketplaces:
+
+                    if m in link.lower():
+
+                        valido = True
+                        break
+
+                if not valido:
+
+                    continue
+
+                links_enviados.add(
+                    link
+                )
+
+                # =====================================
+                # AMAZON TAG
+                # =====================================
+
+                if "amazon" in link:
+
+                    link = adicionar_tag_amazon(
+                        link
+                    )
+
+                mensagem = f"""
+🔥 PROMOÇÃO ENCONTRADA
+
+📦 Grupo:
+{event.chat_id}
+
+🛒 Link:
+{link}
+"""
+
+                enviar_mensagem(
+                    mensagem
+                )
+
+                print(
+                    "PROMOÇÃO ENVIADA"
+                )
+
+        except Exception as e:
+
+            print(
+                "ERRO MSG:",
+                e
+            )
+
+    # =================================================
+    # START
+    # =================================================
+
     await client.start()
 
     print(
@@ -308,9 +286,3 @@ async def main():
     )
 
     await client.run_until_disconnected()
-
-# =====================================================
-# START
-# =====================================================
-
-asyncio.run(main())
