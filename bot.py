@@ -21,8 +21,9 @@ API_HASH = os.getenv(
 )
 
 BOT_TOKEN = os.getenv(
-    "TELEGRAM_BOT_TOKEN")
-    
+    "TELEGRAM_BOT_TOKEN"
+)
+
 CHAT_ID = os.getenv(
     "TELEGRAM_CHAT_ID"
 )
@@ -175,11 +176,56 @@ async def main():
         )
     )
 
+    # =================================================
+    # SESSION FILE
+    # =================================================
+
+    SESSION_FILE = os.path.join(
+        os.getcwd(),
+        "session.session"
+    )
+
+    print(
+        f"SESSION FILE: "
+        f"{SESSION_FILE}"
+    )
+
+    # =================================================
+    # CLIENT
+    # =================================================
+
     client = TelegramClient(
-        "session",
+        SESSION_FILE,
         API_ID,
         API_HASH
     )
+
+    # =================================================
+    # CONNECT
+    # =================================================
+
+    try:
+
+        await client.connect()
+
+        print(
+            "CLIENT CONNECTADO"
+        )
+
+        await client.start()
+
+        print(
+            "TELETHON ONLINE"
+        )
+
+    except Exception as e:
+
+        print(
+            "ERRO TELETHON:",
+            e
+        )
+
+        return
 
     # =================================================
     # EVENTO NOVA MSG
@@ -303,28 +349,11 @@ async def main():
             )
 
     # =================================================
-    # START TELETHON
-    # =================================================
-
-    try:
-
-        await client.start()
-
-        print(
-            "TELETHON ONLINE"
-        )
-
-    except Exception as e:
-
-        print(
-            "ERRO TELETHON:",
-            e
-        )
-
-        return
-
-    # =================================================
     # LOOP
     # =================================================
+
+    print(
+        "MONITORANDO GRUPOS..."
+    )
 
     await client.run_until_disconnected()
