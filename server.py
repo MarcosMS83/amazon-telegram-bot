@@ -34,22 +34,15 @@ def iniciar_bot():
         loop
     )
 
-    try:
+    print(
+        "LOOP BOT INICIADO"
+    )
 
-        print(
-            "LOOP BOT INICIADO"
-        )
+    loop.create_task(
+        main()
+    )
 
-        loop.run_until_complete(
-            main()
-        )
-
-    except Exception as e:
-
-        print(
-            f"ERRO BOT: "
-            f"{e}"
-        )
+    loop.run_forever()
 
 # =====================================================
 # MAIN
@@ -62,7 +55,11 @@ if __name__ == "__main__":
     )
 
     bot_thread = threading.Thread(
-        target=iniciar_bot
+
+        target=iniciar_bot,
+
+        daemon=True
+
     )
 
     bot_thread.start()
