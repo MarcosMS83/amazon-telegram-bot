@@ -1,7 +1,9 @@
+import re
 import asyncio
 import os
 import requests
 
+from telethon import TelegramClient, events
 from dotenv import load_dotenv
 
 # =====================================================
@@ -9,6 +11,14 @@ from dotenv import load_dotenv
 # =====================================================
 
 load_dotenv()
+
+API_ID = int(
+    os.getenv("API_ID")
+)
+
+API_HASH = os.getenv(
+    "API_HASH"
+)
 
 BOT_TOKEN = os.getenv(
     "TELEGRAM_BOT_TOKEN"
@@ -24,157 +34,97 @@ AMAZON_TAG = os.getenv(
 )
 
 # =====================================================
+# CLIENT
+# =====================================================
+
+client = TelegramClient(
+    "session",
+    API_ID,
+    API_HASH
+)
+
+# =====================================================
 # CACHE
 # =====================================================
 
-enviados = {}
+links_enviados = set()
 
 # =====================================================
-# AMAZON
+# GRUPOS MONITORADOS
 # =====================================================
 
-amazon_produtos = [
+GRUPOS = [
 
-    {
-        "titulo":
-        "Echo Dot 5ª Geração Alexa",
-
-        "preco":
-        "299",
-
-        "imagem":
-        "https://m.media-amazon.com/images/I/61EXU8BuGZL._AC_SL1000_.jpg",
-
-        "link":
-        f"https://www.amazon.com.br/dp/B09B8VGCR8?tag={AMAZON_TAG}",
-
-        "tipo":
-        "amazon"
-    },
-
-    {
-        "titulo":
-        "Fire TV Stick Amazon",
-
-        "preco":
-        "249",
-
-        "imagem":
-        "https://m.media-amazon.com/images/I/51kkwT7uQtL._AC_SL1000_.jpg",
-
-        "link":
-        f"https://www.amazon.com.br/dp/B08C1W5N87?tag={AMAZON_TAG}",
-
-        "tipo":
-        "amazon"
-    }
+    "promocoes",
+    "pelando",
+    "ofertas",
+    "achadinhos",
+    "promo"
 
 ]
 
 # =====================================================
-# MERCADO LIVRE
+# EXTRAIR LINKS
 # =====================================================
 
-def buscar_mercado_livre():
+def extrair_links(texto):
 
-    produtos = []
+    regex = r'(https?://[^\s]+)'
+
+    return re.findall(
+        regex,
+        texto
+    )
+
+# =====================================================
+# AMAZON TAG
+# =====================================================
+
+def adicionar_tag_amazon(link):
 
     try:
 
-        print(
-            "CONSULTANDO ML..."
-        )
+        if "amazon" not in link:
 
-        url = (
-            "https://api.mercadolibre.com/"
-            "sites/MLB/search?q=iphone"
-        )
+            return link
 
-        response = requests.get(
+        asin = re.search(
 
-            url,
+            r'/dp/([A-Z0-9]{10})',
 
-            timeout=(5, 15)
+            link
 
         )
 
-        print(
-            f"ML STATUS: "
-            f"{response.status_code}"
-        )
+        if asin:
 
-        data = response.json()
+            codigo = asin.group(1)
 
-        for item in data["results"][:5]:
-
-            produtos.append({
-
-                "titulo":
-                item["title"],
-
-                "preco":
-                str(item["price"]),
-
-                "imagem":
-                item["thumbnail"],
-
-                "link":
-                item["permalink"],
-
-                "tipo":
-                "mercadolivre"
-
-            })
-
-        print(
-            f"ML PRODUTOS: "
-            f"{len(produtos)}"
-        )
+            return (
+                f"https://www.amazon.com.br/dp/"
+                f"{codigo}?tag={AMAZON_TAG}"
+            )
 
     except Exception as e:
 
         print(
-            "ERRO ML:",
+            "ERRO AMAZON TAG:",
             e
         )
 
-    return produtos
+    return link
 
 # =====================================================
-# TELEGRAM
+# ENVIAR TELEGRAM
 # =====================================================
 
-def enviar_telegram(produto):
-
-    emoji = "🟧"
-
-    if produto["tipo"] == "mercadolivre":
-
-        emoji = "🟨"
-
-    texto = f"""
-🔥 PROMOÇÃO
-
-{emoji} Loja: {produto['tipo'].upper()}
-
-📦 {produto['titulo']}
-
-💰 R$ {produto['preco']}
-
-🛒 Comprar:
-{produto['link']}
-"""
+def enviar_mensagem(texto):
 
     try:
 
-        print(
-            f"ENVIANDO: "
-            f"{produto['titulo']}"
-        )
-
         url = (
             f"https://api.telegram.org/bot"
-            f"{BOT_TOKEN}/sendPhoto"
+            f"{BOT_TOKEN}/sendMessage"
         )
 
         payload = {
@@ -182,11 +132,11 @@ def enviar_telegram(produto):
             "chat_id":
             CHAT_ID,
 
-            "photo":
-            produto["imagem"],
+            "text":
+            texto,
 
-            "caption":
-            texto
+            "disable_web_page_preview":
+            False
 
         }
 
@@ -201,79 +151,166 @@ def enviar_telegram(produto):
         )
 
         print(
-            f"TELEGRAM STATUS: "
+            f"MENSAGEM ENVIADA: "
             f"{response.status_code}"
         )
 
     except Exception as e:
 
         print(
-            "ERRO TELEGRAM:",
+            "ERRO ENVIO:",
             e
         )
 
 # =====================================================
-# LOOP
+# NOVA MENSAGEM
 # =====================================================
 
-async def loop_bot():
+@client.on(events.NewMessage)
 
-    print(
-        "LOOP BOT INICIADO"
-    )
+async def nova_mensagem(event):
 
-    while True:
+    try:
 
-        try:
+        chat = await event.get_chat()
 
-            print(
-                "MONTANDO PRODUTOS..."
-            )
+        nome = ""
 
-            produtos = []
+        if hasattr(chat, "title"):
 
-            # AMAZON
-            for p in amazon_produtos:
-
-                produtos.append(p)
-
-            # ML
-            produtos_ml = buscar_mercado_livre()
-
-            for p in produtos_ml:
-
-                produtos.append(p)
-
-            print(
-                f"TOTAL PRODUTOS: "
-                f"{len(produtos)}"
-            )
-
-            for produto in produtos:
-
-                if produto["link"] in enviados:
-
-                    continue
-
-                enviar_telegram(
-                    produto
-                )
-
-                enviados[
-                    produto["link"]
-                ] = True
-
-                await asyncio.sleep(10)
-
-        except Exception as e:
-
-            print(
-                "ERRO LOOP:",
-                e
-            )
+            nome = chat.title.lower()
 
         print(
-            "AGUARDANDO 10 MIN..."
+            f"NOVA MSG: {nome}"
         )
 
-        await asyncio.sleep(600)
+        # =============================================
+        # FILTRO GRUPOS
+        # =============================================
+
+        permitido = False
+
+        for grupo in GRUPOS:
+
+            if grupo in nome:
+
+                permitido = True
+                break
+
+        if not permitido:
+
+            return
+
+        texto = event.raw_text
+
+        if not texto:
+
+            return
+
+        print(
+            "ANALISANDO LINKS..."
+        )
+
+        links = extrair_links(
+            texto
+        )
+
+        print(
+            f"LINKS ENCONTRADOS: "
+            f"{len(links)}"
+        )
+
+        for link in links:
+
+            if link in links_enviados:
+
+                continue
+
+            # =========================================
+            # MARKETPLACES
+            # =========================================
+
+            marketplaces = [
+
+                "amazon",
+                "mercadolivre",
+                "meli",
+                "shopee"
+
+            ]
+
+            valido = False
+
+            for m in marketplaces:
+
+                if m in link.lower():
+
+                    valido = True
+                    break
+
+            if not valido:
+
+                continue
+
+            links_enviados.add(
+                link
+            )
+
+            # =========================================
+            # AMAZON TAG
+            # =========================================
+
+            if "amazon" in link:
+
+                link = adicionar_tag_amazon(
+                    link
+                )
+
+            mensagem = f"""
+🔥 PROMOÇÃO ENCONTRADA
+
+📦 Grupo:
+{nome}
+
+🛒 Link:
+{link}
+"""
+
+            enviar_mensagem(
+                mensagem
+            )
+
+            print(
+                "PROMOÇÃO ENVIADA"
+            )
+
+    except Exception as e:
+
+        print(
+            "ERRO MSG:",
+            e
+        )
+
+# =====================================================
+# MAIN
+# =====================================================
+
+async def main():
+
+    print(
+        "INICIANDO TELETHON..."
+    )
+
+    await client.start()
+
+    print(
+        "TELETHON ONLINE"
+    )
+
+    await client.run_until_disconnected()
+
+# =====================================================
+# START
+# =====================================================
+
+asyncio.run(main())
