@@ -21,9 +21,8 @@ API_HASH = os.getenv(
 )
 
 BOT_TOKEN = os.getenv(
-    "TELEGRAM_BOT_TOKEN"
-)
-
+    "TELEGRAM_BOT_TOKEN")
+    
 CHAT_ID = os.getenv(
     "TELEGRAM_CHAT_ID"
 )
@@ -80,7 +79,7 @@ def adicionar_tag_amazon(link):
 
     try:
 
-        if "amazon" not in link:
+        if "amazon" not in link.lower():
 
             return link
 
@@ -96,10 +95,12 @@ def adicionar_tag_amazon(link):
 
             codigo = asin.group(1)
 
-            return (
+            novo_link = (
                 f"https://www.amazon.com.br/dp/"
                 f"{codigo}?tag={AMAZON_TAG}"
             )
+
+            return novo_link
 
     except Exception as e:
 
@@ -111,7 +112,7 @@ def adicionar_tag_amazon(link):
     return link
 
 # =====================================================
-# TELEGRAM BOT API
+# ENVIAR TELEGRAM
 # =====================================================
 
 def enviar_mensagem(texto):
@@ -142,7 +143,7 @@ def enviar_mensagem(texto):
 
             data=payload,
 
-            timeout=(5, 15)
+            timeout=(5, 20)
 
         )
 
@@ -168,6 +169,12 @@ async def main():
         "INICIANDO TELETHON..."
     )
 
+    print(
+        os.path.exists(
+            "session.session"
+        )
+    )
+
     client = TelegramClient(
         "session",
         API_ID,
@@ -175,7 +182,7 @@ async def main():
     )
 
     # =================================================
-    # EVENTO
+    # EVENTO NOVA MSG
     # =================================================
 
     @client.on(events.NewMessage)
@@ -183,6 +190,10 @@ async def main():
     async def nova_mensagem(event):
 
         try:
+
+            # =========================================
+            # FILTRO GRUPOS
+            # =========================================
 
             if event.chat_id not in GRUPOS:
 
@@ -199,6 +210,10 @@ async def main():
 
                 return
 
+            # =========================================
+            # EXTRAIR LINKS
+            # =========================================
+
             links = extrair_links(
                 texto
             )
@@ -208,7 +223,15 @@ async def main():
                 f"{len(links)}"
             )
 
+            # =========================================
+            # PROCESSAR LINKS
+            # =========================================
+
             for link in links:
+
+                # =====================================
+                # DUPLICADO
+                # =====================================
 
                 if link in links_enviados:
 
@@ -225,9 +248,9 @@ async def main():
 
                 valido = False
 
-                for m in marketplaces:
+                for marketplace in marketplaces:
 
-                    if m in link.lower():
+                    if marketplace in link.lower():
 
                         valido = True
                         break
@@ -244,11 +267,15 @@ async def main():
                 # AMAZON TAG
                 # =====================================
 
-                if "amazon" in link:
+                if "amazon" in link.lower():
 
                     link = adicionar_tag_amazon(
                         link
                     )
+
+                # =====================================
+                # MENSAGEM
+                # =====================================
 
                 mensagem = f"""
 🔥 PROMOÇÃO ENCONTRADA
@@ -276,13 +303,28 @@ async def main():
             )
 
     # =================================================
-    # START
+    # START TELETHON
     # =================================================
 
-    await client.start()
+    try:
 
-    print(
-        "TELETHON ONLINE"
-    )
+        await client.start()
+
+        print(
+            "TELETHON ONLINE"
+        )
+
+    except Exception as e:
+
+        print(
+            "ERRO TELETHON:",
+            e
+        )
+
+        return
+
+    # =================================================
+    # LOOP
+    # =================================================
 
     await client.run_until_disconnected()
