@@ -1,5 +1,4 @@
 import re
-import asyncio
 import os
 import requests
 
@@ -21,9 +20,8 @@ API_HASH = os.getenv(
 )
 
 BOT_TOKEN = os.getenv(
-    "TELEGRAM_BOT_TOKEN"
-)
-
+    "TELEGRAM_BOT_TOKEN")
+    
 CHAT_ID = os.getenv(
     "TELEGRAM_CHAT_ID"
 )
@@ -212,7 +210,19 @@ async def main():
             "CLIENT CONNECTADO"
         )
 
-        await client.start()
+        autorizado = await client.is_user_authorized()
+
+        print(
+            f"AUTH: {autorizado}"
+        )
+
+        if not autorizado:
+
+            print(
+                "SESSION INVALIDA"
+            )
+
+            return
 
         print(
             "TELETHON ONLINE"
