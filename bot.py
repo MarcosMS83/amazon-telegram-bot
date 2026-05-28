@@ -174,10 +174,6 @@ async def main():
         "INICIANDO TELETHON..."
     )
 
-    # =================================================
-    # SESSION
-    # =================================================
-
     existe = os.path.exists(
         "session.session"
     )
@@ -187,9 +183,13 @@ async def main():
         f"{existe}"
     )
 
+    # =================================================
+    # SESSION
+    # =================================================
+
     SESSION_FILE = os.path.join(
         os.getcwd(),
-        "session.session"
+        "session"
     )
 
     print(
@@ -219,7 +219,7 @@ async def main():
 
             print(
                 f"TENTANDO CONECTAR: "
-                f"{tentativa+1}"
+                f"{tentativa + 1}"
             )
 
             await asyncio.wait_for(
@@ -299,10 +299,6 @@ async def main():
 
         try:
 
-            # =========================================
-            # FILTRO GRUPOS
-            # =========================================
-
             if event.chat_id not in GRUPOS:
 
                 return
@@ -318,10 +314,6 @@ async def main():
 
                 return
 
-            # =========================================
-            # EXTRAIR LINKS
-            # =========================================
-
             links = extrair_links(
                 texto
             )
@@ -331,15 +323,7 @@ async def main():
                 f"{len(links)}"
             )
 
-            # =========================================
-            # PROCESSAR LINKS
-            # =========================================
-
             for link in links:
-
-                # =====================================
-                # DUPLICADO
-                # =====================================
 
                 if link in links_enviados:
 
@@ -371,19 +355,11 @@ async def main():
                     link
                 )
 
-                # =====================================
-                # AMAZON TAG
-                # =====================================
-
                 if "amazon" in link.lower():
 
                     link = adicionar_tag_amazon(
                         link
                     )
-
-                # =====================================
-                # MENSAGEM
-                # =====================================
 
                 mensagem = f"""
 🔥 PROMOÇÃO ENCONTRADA
