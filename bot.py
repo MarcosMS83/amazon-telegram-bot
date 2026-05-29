@@ -1,7 +1,6 @@
 import os
 import re
 import asyncio
-import socket
 import requests
 
 from telethon import TelegramClient, events
@@ -93,30 +92,23 @@ async def main():
         print(str(e))
         return
 
+    # TESTE HTTPS
     try:
 
         print("=" * 50)
-        print("TESTANDO TCP TELEGRAM")
+        print("TESTE HTTPS TELEGRAM")
         print("=" * 50)
 
-        host = "149.154.167.51"
-        porta = 443
-
-        print("HOST:", host)
-        print("PORTA:", porta)
-
-        s = socket.create_connection(
-            (host, porta),
+        resposta = requests.get(
+            "https://api.telegram.org",
             timeout=10
         )
 
-        print("TCP OK")
-
-        s.close()
+        print("STATUS HTTPS:", resposta.status_code)
 
     except Exception as e:
 
-        print("ERRO TCP")
+        print("ERRO HTTPS")
         print(type(e).__name__)
         print(str(e))
         return
