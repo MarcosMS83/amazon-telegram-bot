@@ -1,12 +1,24 @@
 import os
 import re
-import asyncio
 import requests
 
 from telethon import TelegramClient, events
 from dotenv import load_dotenv
 
 load_dotenv()
+
+print("====================================")
+print("INICIANDO BOT")
+print("====================================")
+
+print("API_ID:", os.getenv("API_ID"))
+print("API_HASH:", bool(os.getenv("API_HASH")))
+print("BOT_TOKEN:", bool(os.getenv("TELEGRAM_BOT_TOKEN")))
+print("CHAT_ID:", os.getenv("TELEGRAM_CHAT_ID"))
+print("SOURCE_GROUPS:", os.getenv("SOURCE_GROUPS"))
+
+print("ARQUIVOS DO DIRETORIO:")
+print(os.listdir("."))
 
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
@@ -32,28 +44,41 @@ def extrair_links(texto):
 
 
 def enviar_telegram(texto):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    try:
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
-    requests.post(
-        url,
-        data={
-            "chat_id": CHAT_ID,
-            "text": texto,
-            "disable_web_page_preview": False,
-        },
-        timeout=20,
-    )
+        r = requests.post(
+            url,
+            data={
+                "chat_id": CHAT_ID,
+                "text": texto,
+                "disable_web_page_preview": False,
+            },
+            timeout=20,
+        )
+
+        print("TELEGRAM STATUS:", r.status_code)
+
+    except Exception as e:
+        print("ERRO TELEGRAM:", e)
 
 
 async def main():
 
-    print("INICIANDO TELETHON...")
+    print("====================================")
+    print("INICIANDO TELETHON")
+    print("====================================")
 
     SESSION_FILE = "session"
 
     print(
         "SESSION EXISTE:",
         os.path.exists("session.session")
+    )
+
+    print(
+        "SESSION FILE:",
+        os.path.abspath("session.session")
     )
 
     client = TelegramClient(
@@ -85,6 +110,9 @@ async def main():
 
             links = extrair_links(texto)
 
+            if links:
+                print("LINKS ENCONTRADOS:", links)
+
             for link in links:
 
                 if link in links_enviados:
@@ -114,9 +142,10 @@ async def main():
                 print("PROMOÇÃO ENVIADA")
 
         except Exception as e:
-            print("ERRO:", e)
+            print("ERRO HANDLER:", e)
 
+    print("====================================")
     print("MONITORANDO GRUPOS...")
+    print("====================================")
 
     await client.run_until_disconnected()
-```
