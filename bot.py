@@ -45,6 +45,7 @@ def extrair_links(texto):
 
 def enviar_telegram(texto):
     try:
+
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
         r = requests.post(
@@ -81,25 +82,57 @@ async def main():
         os.path.abspath("session.session")
     )
 
-    client = TelegramClient(
-        SESSION_FILE,
-        API_ID,
-        API_HASH
-    )
+    try:
 
-    await client.connect()
+        client = TelegramClient(
+            SESSION_FILE,
+            API_ID,
+            API_HASH
+        )
 
-    print("CLIENT CONNECTADO")
+        print("CRIANDO CLIENT")
 
-    autorizado = await client.is_user_authorized()
+        await client.connect()
 
-    print("AUTH:", autorizado)
+        print("CLIENT CONNECTADO")
 
-    if not autorizado:
-        print("SESSION INVALIDA")
+    except Exception as e:
+
+        print("====================================")
+        print("ERRO AO CONECTAR")
+        print("TIPO:", type(e).__name__)
+        print("ERRO:", str(e))
+        print("====================================")
+
         return
 
+    try:
+
+        autorizado = await client.is_user_authorized()
+
+        print("AUTH:", autorizado)
+
+    except Exception as e:
+
+        print("====================================")
+        print("ERRO AUTH")
+        print("TIPO:", type(e).__name__)
+        print("ERRO:", str(e))
+        print("====================================")
+
+        return
+
+    if not autorizado:
+
+        print("====================================")
+        print("SESSION INVALIDA")
+        print("====================================")
+
+        return
+
+    print("====================================")
     print("TELETHON ONLINE")
+    print("====================================")
 
     @client.on(events.NewMessage(chats=GRUPOS))
     async def handler(event):
@@ -119,12 +152,12 @@ async def main():
                     continue
 
                 if not any(
-                    x in link.lower()
-                    for x in [
+                    palavra in link.lower()
+                    for palavra in [
                         "amazon",
                         "mercadolivre",
                         "meli",
-                        "shopee",
+                        "shopee"
                     ]
                 ):
                     continue
@@ -139,10 +172,15 @@ async def main():
 
                 enviar_telegram(mensagem)
 
-                print("PROMOÇÃO ENVIADA")
+                print("PROMOÇÃO ENVIADA:", link)
 
         except Exception as e:
-            print("ERRO HANDLER:", e)
+
+            print("====================================")
+            print("ERRO HANDLER")
+            print(type(e).__name__)
+            print(str(e))
+            print("====================================")
 
     print("====================================")
     print("MONITORANDO GRUPOS...")
