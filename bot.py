@@ -1,5 +1,6 @@
 import os
 import re
+import asyncio
 import requests
 
 from telethon import TelegramClient, events
@@ -97,11 +98,14 @@ async def main():
 
     try:
 
-        print("INICIANDO CONNECT")
+        print("ANTES CONNECT")
 
-        await client.connect()
+        await asyncio.wait_for(
+            client.connect(),
+            timeout=30
+        )
 
-        print("CLIENT CONECTADO")
+        print("DEPOIS CONNECT")
 
     except Exception as e:
 
