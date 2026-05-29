@@ -28,6 +28,9 @@ GRUPOS = [
     for x in SOURCE_GROUPS.split(",")
     if x.strip()
 ]
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
 
 print("API_ID:", API_ID)
 print("API_HASH:", bool(API_HASH))
