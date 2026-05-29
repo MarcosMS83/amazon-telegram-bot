@@ -1,6 +1,7 @@
 import os
 import re
 import asyncio
+import socket
 import requests
 
 from telethon import TelegramClient, events
@@ -45,6 +46,7 @@ def extrair_links(texto):
 
 def enviar_telegram(texto):
     try:
+
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
         resposta = requests.post(
@@ -60,7 +62,8 @@ def enviar_telegram(texto):
         print("STATUS TELEGRAM:", resposta.status_code)
 
     except Exception as e:
-        print("ERRO TELEGRAM:")
+
+        print("ERRO TELEGRAM")
         print(type(e).__name__)
         print(str(e))
 
@@ -86,6 +89,34 @@ async def main():
     except Exception as e:
 
         print("ERRO CRIANDO CLIENT")
+        print(type(e).__name__)
+        print(str(e))
+        return
+
+    try:
+
+        print("=" * 50)
+        print("TESTANDO TCP TELEGRAM")
+        print("=" * 50)
+
+        host = "149.154.167.51"
+        porta = 443
+
+        print("HOST:", host)
+        print("PORTA:", porta)
+
+        s = socket.create_connection(
+            (host, porta),
+            timeout=10
+        )
+
+        print("TCP OK")
+
+        s.close()
+
+    except Exception as e:
+
+        print("ERRO TCP")
         print(type(e).__name__)
         print(str(e))
         return
