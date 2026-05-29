@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 print("====================================")
-print("INICIANDO BOT")
+print("VERSAO BOT 29-05-2026 12:00")
+print("TESTE RENDER")
 print("====================================")
 
 print("API_ID:", os.getenv("API_ID"))
@@ -34,7 +35,7 @@ GRUPOS = [
     if x.strip()
 ]
 
-print(f"GRUPOS MONITORADOS: {GRUPOS}")
+print("GRUPOS MONITORADOS:", GRUPOS)
 
 links_enviados = set()
 
@@ -44,6 +45,7 @@ def extrair_links(texto):
 
 
 def enviar_telegram(texto):
+
     try:
 
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -53,15 +55,18 @@ def enviar_telegram(texto):
             data={
                 "chat_id": CHAT_ID,
                 "text": texto,
-                "disable_web_page_preview": False,
+                "disable_web_page_preview": False
             },
-            timeout=20,
+            timeout=20
         )
 
         print("TELEGRAM STATUS:", r.status_code)
 
     except Exception as e:
-        print("ERRO TELEGRAM:", e)
+
+        print("ERRO TELEGRAM:")
+        print(type(e).__name__)
+        print(str(e))
 
 
 async def main():
@@ -69,8 +74,6 @@ async def main():
     print("====================================")
     print("INICIANDO TELETHON")
     print("====================================")
-
-    SESSION_FILE = "session"
 
     print(
         "SESSION EXISTE:",
@@ -84,13 +87,15 @@ async def main():
 
     try:
 
+        print("CRIANDO CLIENT")
+
         client = TelegramClient(
-            SESSION_FILE,
+            "session",
             API_ID,
             API_HASH
         )
 
-        print("CRIANDO CLIENT")
+        print("CLIENT CRIADO")
 
         await client.connect()
 
@@ -124,9 +129,7 @@ async def main():
 
     if not autorizado:
 
-        print("====================================")
         print("SESSION INVALIDA")
-        print("====================================")
 
         return
 
@@ -152,8 +155,8 @@ async def main():
                     continue
 
                 if not any(
-                    palavra in link.lower()
-                    for palavra in [
+                    x in link.lower()
+                    for x in [
                         "amazon",
                         "mercadolivre",
                         "meli",
