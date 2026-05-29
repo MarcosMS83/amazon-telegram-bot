@@ -3,12 +3,13 @@ import re
 import requests
 
 from telethon import TelegramClient, events
+from telethon.sessions import StringSession
 from dotenv import load_dotenv
 
 load_dotenv()
 
 print("=" * 50)
-print("VERSAO BOT 29-05-2026")
+print("BOT INICIANDO")
 print("=" * 50)
 
 API_ID = int(os.getenv("API_ID"))
@@ -16,6 +17,8 @@ API_HASH = os.getenv("API_HASH")
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+STRING_SESSION = os.getenv("TELEGRAM_STRING_SESSION")
 
 SOURCE_GROUPS = os.getenv("SOURCE_GROUPS", "")
 
@@ -25,18 +28,12 @@ GRUPOS = [
     if x.strip()
 ]
 
-SESSION_FILE = "/opt/render/project/src/session.session"
-
 print("API_ID:", API_ID)
+print("API_HASH:", bool(API_HASH))
+print("BOT_TOKEN:", bool(BOT_TOKEN))
+print("CHAT_ID:", CHAT_ID)
+print("STRING_SESSION:", STRING_SESSION is not None)
 print("GRUPOS:", GRUPOS)
-
-print("ARQUIVOS:")
-print(os.listdir("."))
-
-print("SESSION EXISTE:", os.path.exists(SESSION_FILE))
-
-if os.path.exists(SESSION_FILE):
-    print("SESSION SIZE:", os.path.getsize(SESSION_FILE))
 
 links_enviados = set()
 
@@ -50,17 +47,17 @@ def enviar_telegram(texto):
 
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
-        r = requests.post(
+        resposta = requests.post(
             url,
             data={
                 "chat_id": CHAT_ID,
                 "text": texto,
-                "disable_web_page_preview": False,
+                "disable_web_page_preview": False
             },
-            timeout=20,
+            timeout=20
         )
 
-        print("SEND STATUS:", r.status_code)
+        print("STATUS TELEGRAM:", resposta.status_code)
 
     except Exception as e:
         print("ERRO TELEGRAM:", e)
@@ -74,26 +71,26 @@ async def main():
 
     try:
 
-        print("PASSO 1")
+        print("CRIANDO CLIENT")
 
         client = TelegramClient(
-            SESSION_FILE,
+            StringSession(STRING_SESSION),
             API_ID,
             API_HASH
         )
 
-        print("PASSO 2 - CLIENT CRIADO")
+        print("CLIENT CRIADO")
 
         await client.connect()
 
-        print("PASSO 3 - CLIENT CONNECTADO")
+        print("CLIENT CONECTADO")
 
         autorizado = await client.is_user_authorized()
 
-        print("PASSO 4 - AUTH:", autorizado)
+        print("AUTH:", autorizado)
 
         if not autorizado:
-            print("SESSION INVALIDA")
+            print("SESSAO INVALIDA")
             return
 
     except Exception as e:
@@ -120,7 +117,7 @@ async def main():
             links = extrair_links(texto)
 
             if links:
-                print("LINKS:", links)
+                print("LINKS ENCONTRADOS:", links)
 
             for link in links:
 
@@ -148,7 +145,7 @@ async def main():
 
                 enviar_telegram(mensagem)
 
-                print("ENVIADO:", link)
+                print("PROMOÇÃO ENVIADA:", link)
 
         except Exception as e:
 
