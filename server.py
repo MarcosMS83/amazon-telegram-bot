@@ -6,60 +6,43 @@ from flask import Flask
 
 from bot import main
 
-# =====================================================
-# FLASK
-# =====================================================
-
 app = Flask(__name__)
 
 @app.route("/")
-
 def home():
-
     return "BOT ONLINE"
 
-# =====================================================
-# BOT THREAD
-# =====================================================
 
 def iniciar_bot():
 
-    print(
-        "INICIANDO BOT..."
-    )
+    print("INICIANDO BOT...")
 
     loop = asyncio.new_event_loop()
 
-    asyncio.set_event_loop(
-        loop
-    )
+    asyncio.set_event_loop(loop)
 
-    print(
-        "LOOP BOT INICIADO"
-    )
+    print("LOOP BOT INICIADO")
 
-    loop.create_task(
-        main()
-    )
+    try:
 
-    loop.run_forever()
+        loop.run_until_complete(
+            main()
+        )
 
-# =====================================================
-# MAIN
-# =====================================================
+    except Exception as e:
+
+        print("ERRO BOT:")
+        print(type(e).__name__)
+        print(str(e))
+
 
 if __name__ == "__main__":
 
-    print(
-        "THREAD CRIADA"
-    )
+    print("THREAD CRIADA")
 
     bot_thread = threading.Thread(
-
         target=iniciar_bot,
-
         daemon=True
-
     )
 
     bot_thread.start()
@@ -71,19 +54,11 @@ if __name__ == "__main__":
         )
     )
 
-    print(
-        f"PORTA: "
-        f"{PORT}"
-    )
+    print(f"PORTA: {PORT}")
 
     app.run(
-
         host="0.0.0.0",
-
         port=PORT,
-
         debug=False,
-
         use_reloader=False
-
     )
