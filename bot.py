@@ -44,9 +44,7 @@ def extrair_links(texto):
 
 
 def enviar_telegram(texto):
-
     try:
-
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
         resposta = requests.post(
@@ -62,7 +60,6 @@ def enviar_telegram(texto):
         print("STATUS TELEGRAM:", resposta.status_code)
 
     except Exception as e:
-
         print("ERRO TELEGRAM:")
         print(type(e).__name__)
         print(str(e))
@@ -88,57 +85,32 @@ async def main():
 
     except Exception as e:
 
-        print("=" * 50)
         print("ERRO CRIANDO CLIENT")
         print(type(e).__name__)
         print(str(e))
-        print("=" * 50)
-
         return
 
     try:
 
-        print("ANTES CONNECT")
+        print("ANTES START")
 
         await asyncio.wait_for(
-            client.connect(),
+            client.start(),
             timeout=30
         )
 
-        print("DEPOIS CONNECT")
+        print("DEPOIS START")
+
+        me = await client.get_me()
+
+        print("USUARIO:", me.id)
 
     except Exception as e:
 
         print("=" * 50)
-        print("ERRO CONNECT")
+        print("ERRO START")
         print(type(e).__name__)
         print(str(e))
-        print("=" * 50)
-
-        return
-
-    try:
-
-        print("VERIFICANDO AUTH")
-
-        autorizado = await client.is_user_authorized()
-
-        print("AUTH:", autorizado)
-
-    except Exception as e:
-
-        print("=" * 50)
-        print("ERRO AUTH")
-        print(type(e).__name__)
-        print(str(e))
-        print("=" * 50)
-
-        return
-
-    if not autorizado:
-
-        print("=" * 50)
-        print("SESSAO INVALIDA")
         print("=" * 50)
 
         return
@@ -155,9 +127,6 @@ async def main():
             texto = event.raw_text or ""
 
             links = extrair_links(texto)
-
-            if links:
-                print("LINKS ENCONTRADOS:", links)
 
             for link in links:
 
