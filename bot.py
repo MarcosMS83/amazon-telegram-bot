@@ -32,7 +32,7 @@ print("API_ID:", API_ID)
 print("API_HASH:", bool(API_HASH))
 print("BOT_TOKEN:", bool(BOT_TOKEN))
 print("CHAT_ID:", CHAT_ID)
-print("STRING_SESSION:", STRING_SESSION is not None)
+print("STRING_SESSION:", bool(STRING_SESSION))
 print("GRUPOS:", GRUPOS)
 
 links_enviados = set()
@@ -43,6 +43,7 @@ def extrair_links(texto):
 
 
 def enviar_telegram(texto):
+
     try:
 
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -60,7 +61,10 @@ def enviar_telegram(texto):
         print("STATUS TELEGRAM:", resposta.status_code)
 
     except Exception as e:
-        print("ERRO TELEGRAM:", e)
+
+        print("ERRO TELEGRAM:")
+        print(type(e).__name__)
+        print(str(e))
 
 
 async def main():
@@ -81,24 +85,56 @@ async def main():
 
         print("CLIENT CRIADO")
 
+    except Exception as e:
+
+        print("=" * 50)
+        print("ERRO CRIANDO CLIENT")
+        print(type(e).__name__)
+        print(str(e))
+        print("=" * 50)
+
+        return
+
+    try:
+
+        print("INICIANDO CONNECT")
+
         await client.connect()
 
         print("CLIENT CONECTADO")
+
+    except Exception as e:
+
+        print("=" * 50)
+        print("ERRO CONNECT")
+        print(type(e).__name__)
+        print(str(e))
+        print("=" * 50)
+
+        return
+
+    try:
+
+        print("VERIFICANDO AUTH")
 
         autorizado = await client.is_user_authorized()
 
         print("AUTH:", autorizado)
 
-        if not autorizado:
-            print("SESSAO INVALIDA")
-            return
-
     except Exception as e:
 
         print("=" * 50)
-        print("ERRO TELETHON")
+        print("ERRO AUTH")
         print(type(e).__name__)
         print(str(e))
+        print("=" * 50)
+
+        return
+
+    if not autorizado:
+
+        print("=" * 50)
+        print("SESSAO INVALIDA")
         print("=" * 50)
 
         return
@@ -149,7 +185,7 @@ async def main():
 
         except Exception as e:
 
-            print("ERRO HANDLER:")
+            print("ERRO HANDLER")
             print(type(e).__name__)
             print(str(e))
 
