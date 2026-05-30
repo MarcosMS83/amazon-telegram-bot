@@ -28,9 +28,6 @@ GRUPOS = [
     for x in SOURCE_GROUPS.split(",")
     if x.strip()
 ]
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
 
 print("API_ID:", API_ID)
 print("API_HASH:", bool(API_HASH))
@@ -47,6 +44,7 @@ def extrair_links(texto):
 
 
 def enviar_telegram(texto):
+
     try:
 
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -95,41 +93,17 @@ async def main():
         print(str(e))
         return
 
-    # TESTE HTTPS
-    try:
-
-        print("=" * 50)
-        print("TESTE HTTPS TELEGRAM")
-        print("=" * 50)
-
-        resposta = requests.get(
-            "https://api.telegram.org",
-            timeout=10
-        )
-
-        print("STATUS HTTPS:", resposta.status_code)
-
-    except Exception as e:
-
-        print("ERRO HTTPS")
-        print(type(e).__name__)
-        print(str(e))
-        return
-
     try:
 
         print("ANTES START")
 
-        await asyncio.wait_for(
-            client.start(),
-            timeout=30
-        )
+        await client.start()
 
         print("DEPOIS START")
 
         me = await client.get_me()
 
-        print("USUARIO:", me.id)
+        print("USUARIO LOGADO:", me.id)
 
     except Exception as e:
 
@@ -138,7 +112,6 @@ async def main():
         print(type(e).__name__)
         print(str(e))
         print("=" * 50)
-
         return
 
     print("=" * 50)
@@ -189,3 +162,7 @@ async def main():
             print(str(e))
 
     await client.run_until_disconnected()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
